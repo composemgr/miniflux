@@ -20,8 +20,8 @@ services:
       TZ: ${TZ:-America/New_York}
       DATABASE_URL: postgresql://${DB_USER_NAME:-miniflux}:${DB_USER_PASS:-changeme_db_password}@miniflux-db:5432/${DB_CREATE_DATABASE_NAME:-miniflux}
     volumes:
-      - ./rootfs/data/miniflux:/var/www/data
-      - ./rootfs/config/miniflux:/config
+      - ./volumes/data/miniflux:/var/www/data
+      - ./volumes/config/miniflux:/config
     depends_on:
       - miniflux-db
     healthcheck:
@@ -43,7 +43,7 @@ services:
       POSTGRES_USER: ${DB_USER_NAME:-miniflux}
       POSTGRES_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
     volumes:
-      - ./rootfs/data/db/postgres/miniflux:/var/lib/postgresql/data
+      - ./volumes/data/db/postgres/miniflux:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 30s
