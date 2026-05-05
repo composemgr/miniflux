@@ -51,9 +51,9 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/miniflux` - Data storage
-- `./rootfs/config/miniflux` - Data storage
-- `./rootfs/data/db/postgres/miniflux` - Data storage
+- `./volumes/data/miniflux` - Data storage
+- `./volumes/config/miniflux` - Data storage
+- `./volumes/data/db/postgres/miniflux` - Data storage
 
 ## 🔐 Security
 
