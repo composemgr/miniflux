@@ -1,0 +1,72 @@
+name: miniflux
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: miniflux/miniflux:latest
+    container_name: miniflux-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: miniflux-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      DATABASE_URL: postgresql://${DB_USER_NAME:-miniflux}:${DB_USER_PASS:-replace-with-a-random-password}@db:5432/${DB_CREATE_DATABASE_NAME:-miniflux}?sslmode=disable
+      RUN_MIGRATIONS: '1'
+      CREATE_ADMIN: '1'
+      ADMIN_USERNAME: ${APP_ADMIN_USER:-administrator}
+      ADMIN_PASSWORD: ${APP_ADMIN_PASS:-replace-with-a-random-password}
+      BASE_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', '/usr/bin/miniflux', '-healthcheck', 'auto']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://miniflux-app:8080'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - miniflux
+      - cloudflare
+
+  db:
+    image: postgres:latest
+    container_name: miniflux-db
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: miniflux-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: miniflux-db
+      POSTGRES_DB: ${DB_CREATE_DATABASE_NAME:-miniflux}
+      POSTGRES_USER: ${DB_USER_NAME:-miniflux}
+      POSTGRES_PASSWORD: ${DB_USER_PASS:-replace-with-a-random-password}
+    volumes:
+      - './volumes/db/postgres/miniflux:/var/lib/postgresql/data:z'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - miniflux
+
+networks:
+  miniflux:
+    name: miniflux
+    external: false
+  cloudflare:
+    external: true
